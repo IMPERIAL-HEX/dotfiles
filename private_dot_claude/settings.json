@@ -1,0 +1,84 @@
+{
+  "env": {
+    "KB_REPO": "IMPERIAL-HEX/knowledge-base",
+    "KB_LOCAL": "/home/hex/work/knowledge-extraction/knowledge-base",
+    "KB_BASE": "main"
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git checkout*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(npm run *)",
+      "Bash(npm test*)",
+      "Bash(npm install*)",
+      "Bash(yarn *)",
+      "Bash(pnpm *)",
+      "Bash(bun *)",
+      "Bash(vitest*)",
+      "Bash(jest*)",
+      "Bash(pytest*)",
+      "Bash(python *)",
+      "Bash(node *)",
+      "Bash(ls *)",
+      "Bash(find *)",
+      "Bash(cat *)",
+      "Bash(pwd *)",
+      "Bash(echo \"build exit: $?\")",
+      "Bash(git stash *)",
+      "Bash(grep -oE \"max-width: ?\\\\\\\\\\\\$?\\\\{?[0-9a-zA-Z_]*\\\\}?px|maxWidth|690\" dist/widget/widget.js)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(echo \"typecheck exit: $?\")",
+      "Bash(cd /home/hex/ws-work/voice-agents-monorepo/apps/forms *)",
+      "Bash(git ls-tree *)",
+      "Bash(grep -E \"/form\\\\.tsx$\")",
+      "Bash(sed 's#apps/forms/src/forms/##; s#/form.tsx##')",
+      "Bash(git fetch *)",
+      "Bash(mkdir -p media)",
+      "Bash(mv widget/media/orb.webm media/orb.webm)",
+      "Bash(mv widget/car-loading.svg media/car-loading.svg)",
+      "Bash(rmdir widget/media)",
+      "Bash(echo \"verify exit=$?\")",
+      "Bash(git -c user.name=IMPERIAL-HEX commit -q -m 'chore: scaffold expo router app with typescript, eslint and jest' -m 'Pinned to the native module versions Expo SDK 57 bundles rather than npm *)",
+      "Bash(git -c user.name=IMPERIAL-HEX commit -q -m 'feat: add dummyjson client with request timeout and retry backoff' -m 'Retries only on 408, 429 and 5xx so a 404 fails fast. Aborts are never *)",
+      "Bash(git -c user.name=\"IMPERIAL-HEX\" commit -q -m \"feat: add theme tokens with persisted light and dark preference\")"
+    ],
+    "deny": [
+      "Bash(rm -rf / *)",
+      "Bash(sudo *)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git reset *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
+    ]
+  },
+  "model": "claude-fable-5[1m]",
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code' 'Claude Code needs your attention'"
+          }
+        ]
+      }
+    ]
+  },
+  "effortLevel": "xhigh",
+  "theme": "dark",
+  "switchModelsOnFlag": true
+}

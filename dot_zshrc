@@ -1,0 +1,14 @@
+# Oh My Zsh
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+CASE_SENSITIVE="true"
+ENABLE_CORRECTION="true"
+HIST_STAMPS="mm/dd/yyyy"
+plugins=(git history-substring-search)
+source $ZSH/oh-my-zsh.sh
+
+# env.zsh is skipped here — ~/.zshenv already loaded it.
+for config_file in ~/.config/zsh/*.zsh(N); do
+  [[ "${config_file:t}" == "env.zsh" ]] && continue
+  source "$config_file"
+done

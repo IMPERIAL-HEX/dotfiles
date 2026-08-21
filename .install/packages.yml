@@ -1,0 +1,129 @@
+# Declarative package manifest for machine bootstrap. Edit this file, not the scripts.
+# Curated 2026-08 from apt history (479 explicit installs), zsh history frequency, and apt-mark showmanual.
+
+apt:
+  # shell & core CLI
+  - zsh
+  - git
+  - curl
+  - tmux
+  - stow            # kept installed; chezmoi manages dotfiles now
+  - bat             # aliased as batcat wrappers in aliases.zsh
+  - eza
+  - fd-find
+  - fzf
+  - ripgrep
+  - btop
+  - fastfetch
+  - tldr
+  - plocate
+  - xclip
+  - tree-sitter-cli
+  - luarocks
+  - build-essential
+  - python3-pip
+  - python3-venv
+  - mkcert
+  - debsums
+  - net-tools
+  - nethogs
+  - ffmpeg
+  - zoxide          # was a manual static binary on the old box; apt version is fine
+  # desktop apps
+  - localsend
+  - obs-studio
+  - dconf-editor
+  - gnome-shell-extension-manager
+  - gnome-software-plugin-flatpak
+  - flatpak
+  - pass
+  # android work — drop this group if the phone-recovery era is over
+  - adb
+  - fastboot
+  - android-sdk-libsparse-utils
+  - libusb-1.0-0
+  # review: one-off era, install on demand instead
+  # - testdisk exfatprogs xvfb virtualbox-7.2 obsidian(deb)
+
+apt_repos:
+  - name: docker
+    key: https://download.docker.com/linux/ubuntu/gpg
+    list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu noble stable"
+    packages: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+  - name: vscode
+    key: https://packages.microsoft.com/keys/microsoft.asc
+    list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main"
+    packages: [code]
+  - name: google-chrome
+    key: https://dl.google.com/linux/linux_signing_key.pub
+    list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome-stable/deb/ stable main"
+    packages: [google-chrome-stable]
+  - name: signal
+    key: https://updates.signal.org/desktop/apt/keys.asc
+    list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/signal-desktop.gpg] https://updates.signal.org/desktop/apt xenial main"
+    packages: [signal-desktop]
+  - name: slack
+    key: https://packagecloud.io/slacktechnologies/slack/gpgkey
+    list: "deb [signed-by=/etc/apt/keyrings/slack.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ jessie main"
+    packages: [slack-desktop]
+  - name: neovim-ppa
+    ppa: ppa:neovim-ppa/stable
+    packages: [neovim]   # old box also had a manual /usr/local/bin/nvim shadowing this; use the PPA only
+  - name: fastfetch-ppa
+    ppa: ppa:zhangsongcui3371/fastfetch
+    packages: []         # fastfetch listed under apt above; PPA gives newer builds
+  - name: cursor
+    list: "see /etc/apt/sources.list.d/cursor.sources on old box"
+    packages: [cursor]
+  - name: antigravity
+    key: /etc/apt/keyrings/antigravity.gpg   # from old box
+    list: "deb https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev antigravity-debian main"
+    packages: [antigravity]
+
+deb_downloads:
+  # dpkg packages with no apt repo; download fresh .deb and `apt install ./file.deb`
+  - name: ghostty
+    source: https://ghostty.org/download
+  - name: gcm            # git-credential-manager; .gitconfig points at /usr/local/bin/git-credential-manager
+    source: https://github.com/git-ecosystem/git-credential-manager/releases
+  - name: kiro
+    source: https://kiro.dev
+  - name: docker-desktop
+    source: https://docs.docker.com/desktop/setup/install/linux/ubuntu/
+  - name: obsidian
+    source: https://obsidian.md/download
+
+snap: [pinta, vlc]        # firefox + thunderbird ship with Ubuntu
+
+flatpak: [com.getpostman.Postman]
+
+node:
+  manager: nvm            # decided 2026-08: keep nvm; revisit mise when setting up the new box
+  versions: ["22", "24"]
+  default: "24"
+  npm_global: [ctx7, typescript]   # corepack ships with node
+  pnpm: standalone        # curl -fsSL https://get.pnpm.io/install.sh | sh -  (PNPM_HOME set in env.zsh)
+
+standalone_installers:
+  - name: lazygit
+    source: https://github.com/jesseduffield/lazygit/releases   # to /usr/local/bin
+  - name: claude
+    source: https://claude.ai/install.sh
+  - name: zed
+    source: https://zed.dev/install.sh
+  - name: chezmoi
+    source: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
+
+gnome_extensions:
+  # install with gext (pipx install gnome-extensions-cli) BEFORE loading dconf/extensions.ini
+  - blur-my-shell@aunetx
+  - space-bar@luchrioh
+  - AlphabeticalAppGrid@stuarthayhurst
+  - tactile@lundal.io
+  - undecorate@sun.wxg@gmail.com
+  - just-perfection-desktop@just-perfection
+  - tophat@fflewddur.github.io
+  - clipboard-history@alexsaveau.dev
+
+shell_framework:
+  oh_my_zsh: https://ohmyz.sh   # install before first zsh login; nothing custom lives inside it
