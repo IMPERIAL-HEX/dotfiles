@@ -3,7 +3,8 @@
 export LANG=en_US.UTF-8
 
 typeset -U path PATH
-path=("$HOME/.local/bin" $path "$HOME/go/bin")
+# bob's nvim-bin must precede /usr/local/bin while an old manual nvim lingers there
+path=("$HOME/.local/bin" "$HOME/.local/share/bob/nvim-bin" $path "$HOME/go/bin")
 
 export PNPM_HOME="$HOME/.local/share/pnpm"
 path=("$PNPM_HOME" $path)

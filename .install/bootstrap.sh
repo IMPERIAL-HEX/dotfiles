@@ -24,7 +24,6 @@ yq_list() {
 phase_repos() {
   log "apt repos and keys"
   sudo install -d -m 0755 /etc/apt/keyrings
-  try sudo add-apt-repository -y ppa:neovim-ppa/stable
   try sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
   fetch_key() { curl -fsSL "$1" | sudo gpg --dearmor --yes -o "/etc/apt/keyrings/$2"; }
   try fetch_key https://download.docker.com/linux/ubuntu/gpg docker.gpg
@@ -41,9 +40,14 @@ phase_repos() {
 
 phase_apt() {
   log "apt packages"
-  for p in $(yq_list apt) docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code google-chrome-stable signal-desktop slack-desktop neovim; do
+  for p in $(yq_list apt) docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code google-chrome-stable signal-desktop slack-desktop; do
     try sudo apt-get install -y "$p"
   done
+}
+
+phase_installers() {
+  log "scripted installers (ghostty, gcm, neovim via bob)"
+  for s in installers/*.sh; do try bash "$s"; done
 }
 
 phase_snapflat() {
@@ -101,7 +105,7 @@ phase_chsh() {
   [ "$(getent passwd "$USER" | cut -d: -f7)" = "$(command -v zsh)" ] || try chsh -s "$(command -v zsh)"
 }
 
-ALL=(repos apt snapflat node shell dotfiles gext dconf chsh)
+ALL=(repos apt installers snapflat node shell dotfiles gext dconf chsh)
 PHASES=("${@:-${ALL[@]}}")
 for ph in "${PHASES[@]}"; do "phase_$ph"; done
 

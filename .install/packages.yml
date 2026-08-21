@@ -21,6 +21,7 @@ apt:
   - tree-sitter-cli
   - luarocks
   - build-essential
+  - unzip           # bob-nvim.sh needs it
   - python3-pip
   - python3-venv
   - mkcert
@@ -66,9 +67,6 @@ apt_repos:
     key: https://packagecloud.io/slacktechnologies/slack/gpgkey
     list: "deb [signed-by=/etc/apt/keyrings/slack.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ jessie main"
     packages: [slack-desktop]
-  - name: neovim-ppa
-    ppa: ppa:neovim-ppa/stable
-    packages: [neovim]   # old box also had a manual /usr/local/bin/nvim shadowing this; use the PPA only
   - name: fastfetch-ppa
     ppa: ppa:zhangsongcui3371/fastfetch
     packages: []         # fastfetch listed under apt above; PPA gives newer builds
@@ -80,12 +78,18 @@ apt_repos:
     list: "deb https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev antigravity-debian main"
     packages: [antigravity]
 
+scripted_installers:
+  # no apt repo offers these; the scripts fetch the latest release and are idempotent
+  - name: ghostty
+    script: installers/ghostty.sh    # ghostty-ubuntu community .deb
+  - name: gcm                        # .gitconfig points at /usr/local/bin/git-credential-manager
+    script: installers/gcm.sh
+  - name: neovim
+    script: installers/bob-nvim.sh   # bob manages nvim versions; never apt (0.9.5 in noble)
+                                     # active nvim: ~/.local/share/bob/nvim-bin (on PATH via env.zsh)
+
 deb_downloads:
   # dpkg packages with no apt repo; download fresh .deb and `apt install ./file.deb`
-  - name: ghostty
-    source: https://ghostty.org/download
-  - name: gcm            # git-credential-manager; .gitconfig points at /usr/local/bin/git-credential-manager
-    source: https://github.com/git-ecosystem/git-credential-manager/releases
   - name: kiro
     source: https://kiro.dev
   - name: docker-desktop

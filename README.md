@@ -6,7 +6,7 @@ Dotfiles for hex's machines, managed with [chezmoi](https://chezmoi.io). The rep
 
 - zsh: `.zshrc`, `.zshenv`, and the real config in `.config/zsh/` (zoxide initializes last in `tools.zsh`; keep it there)
 - git: `.gitconfig` and the global ignore at `.config/git/ignore`
-- neovim: `.config/nvim/` (LazyVim; `lazy-lock.json` pins the plugins)
+- neovim: `.config/nvim/` (LazyVim; `lazy-lock.json` pins the plugins). The nvim binary itself comes from [bob](https://github.com/MordechaiHadad/bob), never apt — `env.zsh` puts `~/.local/share/bob/nvim-bin` on PATH.
 - terminals and editors: `.config/ghostty/config`, `.config/zed/`
 - btop: `btop.conf` and `themes/` only — `btop.log` is churn, never add it
 - GNOME file-manager bookmarks: `.config/gtk-3.0/bookmarks`
@@ -59,6 +59,6 @@ There are no templates yet. When a second machine needs a different value (the f
     chezmoi init git@github.com:IMPERIAL-HEX/dotfiles.git
     ~/.local/share/chezmoi/.install/bootstrap.sh
 
-`bootstrap.sh` runs phases in order: apt repos, apt, snap/flatpak, node (nvm), oh-my-zsh, `chezmoi apply`, GNOME extensions, dconf, `chsh`. Extensions must install before the dconf load or their settings vanish silently. Failures collect in `failed.txt`; rerun a single phase with `./bootstrap.sh <phase>`. Package choices live in `.install/packages.yml` — edit that file, not the script.
+`bootstrap.sh` runs phases in order: apt repos, apt, scripted installers (ghostty, gcm, neovim via bob — `.install/installers/`, each fetches the latest release and is safe to rerun), snap/flatpak, node (nvm), oh-my-zsh, `chezmoi apply`, GNOME extensions, dconf, `chsh`. Extensions must install before the dconf load or their settings vanish silently. Failures collect in `failed.txt`; rerun a single phase with `./bootstrap.sh <phase>`. Package choices live in `.install/packages.yml` — edit that file, not the script.
 
 After bootstrap, authenticate fresh: `ssh-keygen -t ed25519`, upload the key to GitHub, `gpg --full-generate-key` if needed, sign in to browsers and the password manager through their own sync.

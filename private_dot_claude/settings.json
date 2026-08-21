@@ -80,5 +80,6 @@
   },
   "effortLevel": "xhigh",
   "theme": "dark",
-  "switchModelsOnFlag": true
+  "switchModelsOnFlag": true,
+  "agentPushNotifEnabled": true
 }
