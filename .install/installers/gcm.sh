@@ -3,7 +3,7 @@
 # .gitconfig points at /usr/local/bin/git-credential-manager, which the .deb provides.
 set -eu
 url="$(curl -fsSL https://api.github.com/repos/git-ecosystem/git-credential-manager/releases/latest |
-  grep -o '"browser_download_url": *"[^"]*linux_amd64[^"]*\.deb"' | cut -d'"' -f4 | head -1)"
+  grep -o '"browser_download_url": *"[^"]*linux[-_]\(x64\|amd64\)[^"]*\.deb"' | cut -d'"' -f4 | head -1)"
 [ -n "$url" ] || { echo "no gcm .deb found" >&2; exit 1; }
 latest="$(basename "$url" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)"
 current="$(dpkg-query -W -f '${Version}' gcm 2>/dev/null || true)"
