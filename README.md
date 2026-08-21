@@ -84,8 +84,6 @@ Skipping this loses nothing — the next auto-commit stages the whole repo and s
 
 Never added: `.ssh`, `.gnupg`, `.aws`, `.npmrc`, `.password-store`, any `credentials.json`, `.zsh_history`, `.zcompdump*`, app state under `.config` (Code, Chrome, Slack, and the rest). Credentials are re-created on each machine, not synced.
 
-`.gitconfig` references `~/ws-work/.gitconfig-work` for the work identity. That file lives in the work tree and is not synced.
-
 There are no templates yet. When a second machine needs a different value (the first candidate is `.gitconfig`), rename the source file to `.tmpl` and branch on `.chezmoi.hostname`.
 
 Note: .gitconfig is not managed because work or personal pc can differ in the root git account.
