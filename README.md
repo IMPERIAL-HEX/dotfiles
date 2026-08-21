@@ -8,6 +8,8 @@ This repo is the source. The real dotfiles live in `$HOME`. chezmoi copies betwe
 
 Sync to GitHub is automatic: every chezmoi command that changes the repo (`add`, `re-add`, `forget`, `destroy`) also commits and pushes. You never type git for dotfiles. The one place you do is the payload files, covered below.
 
+The auto-sync setting lives in `.chezmoi.toml.tmpl`, the template chezmoi generates its real config from. Whenever that template changes — edited here, or pulled onto another machine by `chezmoi update` — chezmoi warns `config file template has changed, run chezmoi init to regenerate config file`. That is not an error: chezmoi refuses to rewrite its own config silently and wants you to trigger it. Run `chezmoi init` (no arguments) and the warning clears.
+
 In the repo, file names encode the target: `dot_zshrc` becomes `.zshrc`, `private_` means mode 0600, `.tmpl` runs through templating. `chezmoi add` picks these for you. `.chezmoiignore` lists paths chezmoi pretends do not exist: `README.md` (so this doc never lands in `$HOME`) and `.config/btop/btop.log` (churn).
 
 ## The daily habit
@@ -46,10 +48,12 @@ with `.config/btop/btop.log` in `.chezmoiignore`. `chezmoi unmanaged ~/.config/b
 
 ## Removing files
 
-    chezmoi forget ~/.bashrc      # stop syncing; the real file stays in $HOME
-    chezmoi destroy ~/.bashrc     # stop syncing AND delete the real file
+    chezmoi forget ~/.bashrc      # stop syncing; removes it from the repo and GitHub, the file in $HOME stays
+    chezmoi destroy ~/.bashrc     # forget + DELETE the real file from $HOME too
 
-`forget` when the file should live on unmanaged, `destroy` when it should not exist at all. Git history keeps the old content either way.
+`forget` when the file should live on unmanaged, `destroy` when it should not exist anywhere.
+
+"Stop syncing and remove it from the remote" is just `forget`: the auto-push commits the removal, so the file disappears from GitHub's current version in the same command. Git history still holds the old content either way — if the file held a secret, rotate the secret; only a history rewrite truly scrubs it.
 
 ## The payload: .install/ and this README
 
