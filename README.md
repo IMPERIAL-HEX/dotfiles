@@ -2,13 +2,79 @@
 
 Dotfiles for hex's machines, managed with [chezmoi](https://chezmoi.io). The repo also carries the machine-bootstrap payload in `.install/`.
 
+## How it works
+
+This repo is the source. The real dotfiles live in `$HOME`. chezmoi copies between the two — nothing is symlinked.
+
+Sync to GitHub is automatic: every chezmoi command that changes the repo (`add`, `re-add`, `forget`, `destroy`) also commits and pushes. You never type git for dotfiles. The one place you do is the payload files, covered below.
+
+In the repo, file names encode the target: `dot_zshrc` becomes `.zshrc`, `private_` means mode 0600, `.tmpl` runs through templating. `chezmoi add` picks these for you. `.chezmoiignore` lists paths chezmoi pretends do not exist: `README.md` (so this doc never lands in `$HOME`) and `.config/btop/btop.log` (churn).
+
+## The daily habit
+
+Edit any managed dotfile with your normal editor. Then run one command:
+
+    chezmoi re-add
+
+That copies the edit into the repo, commits, and pushes. Done.
+
+To see what changed before syncing it:
+
+    chezmoi status    # which dotfiles differ from the repo (M = modified)
+    chezmoi diff      # the exact difference — shown as what `apply` would undo
+
+Regret the edit? Run `chezmoi apply` instead of `re-add`: the repo version wins and your file is restored.
+
+`re-add` only refreshes files already under management. A brand-new file — even inside a managed folder — needs `chezmoi add` once.
+
+On another machine, pull whatever was pushed:
+
+    chezmoi update
+
+## Adding files
+
+    chezmoi add ~/.config/foo/config     # one file
+    chezmoi add ~/.config/foo            # a folder, recursively
+
+Both commit and push on their own. Never add a secret — it lands on GitHub immediately.
+
+When a folder mixes config with state, take only what you want: add the keepers by name, and put the junk in `.chezmoiignore` so even a later whole-folder add skips it. That is the btop setup —
+
+    chezmoi add ~/.config/btop/btop.conf ~/.config/btop/themes
+
+with `.config/btop/btop.log` in `.chezmoiignore`. `chezmoi unmanaged ~/.config/btop` shows what a folder still has outside management.
+
+## Removing files
+
+    chezmoi forget ~/.bashrc      # stop syncing; the real file stays in $HOME
+    chezmoi destroy ~/.bashrc     # stop syncing AND delete the real file
+
+`forget` when the file should live on unmanaged, `destroy` when it should not exist at all. Git history keeps the old content either way.
+
+## The payload: .install/ and this README
+
+These are repo files, not dotfiles: chezmoi never deploys them and `chezmoi status` never shows them. Editing them is the one case where you type git, through chezmoi's passthrough:
+
+    chezmoi git -- add -A
+    chezmoi git -- commit -m "..."
+    chezmoi git -- push
+
+Skipping this loses nothing — the next auto-commit stages the whole repo and sweeps the edits along. Pushing yourself gets them a proper commit message and an immediate sync.
+
+## Checks
+
+    chezmoi status        # empty: $HOME matches the repo
+    chezmoi git -- status # empty: the repo matches GitHub
+    chezmoi managed       # everything under management
+    chezmoi doctor        # config and environment health
+
 ## What is managed
 
 - zsh: `.zshrc`, `.zshenv`, and the real config in `.config/zsh/` (zoxide initializes last in `tools.zsh`; keep it there)
 - git: `.gitconfig` and the global ignore at `.config/git/ignore`
 - neovim: `.config/nvim/` (LazyVim; `lazy-lock.json` pins the plugins). The nvim binary itself comes from [bob](https://github.com/MordechaiHadad/bob), never apt — `env.zsh` puts `~/.local/share/bob/nvim-bin` on PATH.
 - terminals and editors: `.config/ghostty/config`, `.config/zed/`
-- btop: `btop.conf` and `themes/` only — `btop.log` is churn, never add it
+- btop: `btop.conf` and `themes/` only
 - GNOME file-manager bookmarks: `.config/gtk-3.0/bookmarks`
 - Claude Code: `.claude/settings.json`, `.claude/rules/`, and the hand-written `.claude/skills/kb/`. Marketplace skills are reinstallable and stay out.
 - `.bashrc` as a fallback shell
@@ -16,65 +82,6 @@ Dotfiles for hex's machines, managed with [chezmoi](https://chezmoi.io). The rep
 Never added: `.ssh`, `.gnupg`, `.aws`, `.npmrc`, `.password-store`, any `credentials.json`, `.zsh_history`, `.zcompdump*`, app state under `.config` (Code, Chrome, Slack, and the rest). Credentials are re-created on each machine, not synced.
 
 `.gitconfig` references `~/ws-work/.gitconfig-work` for the work identity. That file lives in the work tree and is not synced.
-
-## Daily use
-
-chezmoi copies files between here (the source) and `$HOME` (the target). Nothing is symlinked.
-
-Two things can drift: managed dotfiles in `$HOME` versus their copies here, and this repo versus GitHub. `chezmoi status` answers the first, `chezmoi git -- status` the second. `chezmoi status` printing nothing means no dotfile has drifted — it never shows repo-payload files (`.install/`, this README), because those are not deployed to `$HOME`.
-
-**Auto-sync is on.** `.chezmoi.toml.tmpl` sets `git.autoCommit` and `git.autoPush`, so any chezmoi command that changes the source (`add`, `re-add`, `edit`, `forget`) commits and pushes to GitHub by itself — no git commands needed. The auto-commit stages the whole source directory, so pending payload edits ride along with it. Two consequences: never `chezmoi add` a secret, it lands on GitHub immediately; and a payload-only edit sits unpushed until the next dotfile change unless you push it yourself (below).
-
-**After editing a managed dotfile in place** — the normal case, run when you want the change kept:
-
-    chezmoi status        # confirm what drifted (M = modified)
-    chezmoi diff          # shows the edit being UNDONE — that is what apply would do
-    chezmoi re-add        # keep the edit; auto-commits and pushes
-
-If the diff shows an edit you regret, run `chezmoi apply` instead: the repo version wins and your `$HOME` file is restored.
-
-**Adding something new** to management:
-
-    chezmoi add ~/.config/foo/config    # auto-commits and pushes
-
-Adding a directory recurses. When a directory mixes config with state, take only what you want — two layers:
-
-    chezmoi add ~/.config/btop/btop.conf ~/.config/btop/themes    # add the keepers, not the folder
-
-and put the junk in `.chezmoiignore` (source root) so even a later whole-folder add skips it:
-
-    .config/btop/btop.log
-
-Ignored paths are invisible to `add`, `apply`, and `status`. `chezmoi unmanaged ~/.config/btop` lists what a folder still has unmanaged.
-
-**Stop syncing a file** you no longer want in the repo:
-
-    chezmoi forget ~/.bashrc     # leaves the real file in $HOME untouched
-
-**Remove a file everywhere** — repo and `$HOME` both:
-
-    chezmoi destroy ~/.bashrc    # deletes the actual file too; git history keeps the old content
-
-Both auto-commit and push like everything else. Use `forget` when the file should live on unmanaged; `destroy` when it should not exist at all.
-
-**After editing repo payload** (`.install/packages.yml`, `bootstrap.sh`, this README) — invisible to `chezmoi status`; push right away with git passthrough:
-
-    chezmoi git -- add -A
-    chezmoi git -- commit -m "..."
-    chezmoi git -- push
-
-**On another machine**, pull and apply whatever was pushed:
-
-    chezmoi update
-
-**Sanity checks**, any time something feels off:
-
-    chezmoi managed       # everything under management
-    chezmoi diff          # empty means $HOME matches the repo
-    chezmoi git -- status # empty means the repo matches GitHub (with autoPush it should be)
-    chezmoi doctor
-
-File naming in the source: `dot_` becomes a leading dot, `private_` means mode 0600, `.tmpl` files run through templating. `chezmoi add` picks these for you. `.chezmoiignore` lists target paths chezmoi must not manage — `README.md` is there so it stays a repo doc instead of landing in `$HOME`.
 
 There are no templates yet. When a second machine needs a different value (the first candidate is `.gitconfig`), rename the source file to `.tmpl` and branch on `.chezmoi.hostname`.
 
