@@ -37,7 +37,25 @@ If the diff shows an edit you regret, run `chezmoi apply` instead: the repo vers
 
     chezmoi add ~/.config/foo/config    # auto-commits and pushes
 
-Adding a directory recurses. Add specific files when the directory mixes config with state, the way `.config/btop` does.
+Adding a directory recurses. When a directory mixes config with state, take only what you want — two layers:
+
+    chezmoi add ~/.config/btop/btop.conf ~/.config/btop/themes    # add the keepers, not the folder
+
+and put the junk in `.chezmoiignore` (source root) so even a later whole-folder add skips it:
+
+    .config/btop/btop.log
+
+Ignored paths are invisible to `add`, `apply`, and `status`. `chezmoi unmanaged ~/.config/btop` lists what a folder still has unmanaged.
+
+**Stop syncing a file** you no longer want in the repo:
+
+    chezmoi forget ~/.bashrc     # leaves the real file in $HOME untouched
+
+**Remove a file everywhere** — repo and `$HOME` both:
+
+    chezmoi destroy ~/.bashrc    # deletes the actual file too; git history keeps the old content
+
+Both auto-commit and push like everything else. Use `forget` when the file should live on unmanaged; `destroy` when it should not exist at all.
 
 **After editing repo payload** (`.install/packages.yml`, `bootstrap.sh`, this README) — invisible to `chezmoi status`; push right away with git passthrough:
 
