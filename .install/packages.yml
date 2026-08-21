@@ -7,7 +7,6 @@ apt:
   - git
   - curl
   - tmux
-  - stow            # kept installed; chezmoi manages dotfiles now
   - bat             # aliased as batcat wrappers in aliases.zsh
   - eza
   - fd-find
@@ -38,13 +37,16 @@ apt:
   - gnome-software-plugin-flatpak
   - flatpak
   - pass
-  # android work — drop this group if the phone-recovery era is over
+  # review: one-off era, install on demand instead
+  # - testdisk exfatprogs xvfb virtualbox-7.2 obsidian(deb)
+
+# Optional groups. Every `apt_group_<name>` installs by default;
+# skip on a machine with: SKIP="android other" ./bootstrap.sh
+apt_group_android:
   - adb
   - fastboot
   - android-sdk-libsparse-utils
   - libusb-1.0-0
-  # review: one-off era, install on demand instead
-  # - testdisk exfatprogs xvfb virtualbox-7.2 obsidian(deb)
 
 apt_repos:
   - name: docker

@@ -43,6 +43,12 @@ phase_apt() {
   for p in $(yq_list apt) docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code google-chrome-stable signal-desktop slack-desktop; do
     try sudo apt-get install -y "$p"
   done
+  # optional groups; exclude with SKIP="android other" ./bootstrap.sh
+  for key in $(grep -o '^apt_group_[a-z_]*' packages.yml); do
+    grp="${key#apt_group_}"
+    case " ${SKIP:-} " in *" $grp "*) log "skipping group: $grp"; continue;; esac
+    for p in $(yq_list "$key"); do try sudo apt-get install -y "$p"; done
+  done
 }
 
 phase_installers() {
@@ -77,7 +83,7 @@ phase_shell() {
 phase_dotfiles() {
   log "chezmoi apply"
   command -v chezmoi >/dev/null || try sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
-  try chezmoi init --apply git@github.com:IMPERIAL-HEX/dotfiles.git
+  try chezmoi init --apply https://github.com/IMPERIAL-HEX/dotfiles.git
 }
 
 phase_gext() {

@@ -56,9 +56,11 @@ There are no templates yet. When a second machine needs a different value (the f
 ## New machine
 
     sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
-    chezmoi init git@github.com:IMPERIAL-HEX/dotfiles.git
-    ~/.local/share/chezmoi/.install/bootstrap.sh
+    ~/.local/bin/chezmoi init https://github.com/IMPERIAL-HEX/dotfiles.git
+    SKIP="android" ~/.local/share/chezmoi/.install/bootstrap.sh
 
-`bootstrap.sh` runs phases in order: apt repos, apt, scripted installers (ghostty, gcm, neovim via bob — `.install/installers/`, each fetches the latest release and is safe to rerun), snap/flatpak, node (nvm), oh-my-zsh, `chezmoi apply`, GNOME extensions, dconf, `chsh`. Extensions must install before the dconf load or their settings vanish silently. Failures collect in `failed.txt`; rerun a single phase with `./bootstrap.sh <phase>`. Package choices live in `.install/packages.yml` — edit that file, not the script.
+The clone is HTTPS on purpose: pushes and private-repo pulls authenticate through git-credential-manager (browser sign-in on first use), not SSH keys. `SKIP` is optional — leave it off to install every group.
+
+`bootstrap.sh` runs phases in order: apt repos, apt, scripted installers (ghostty, gcm, neovim via bob — `.install/installers/`, each fetches the latest release and is safe to rerun), snap/flatpak, node (nvm), oh-my-zsh, `chezmoi apply`, GNOME extensions, dconf, `chsh`. Extensions must install before the dconf load or their settings vanish silently. Failures collect in `failed.txt`; rerun a single phase with `./bootstrap.sh <phase>`. Package choices live in `.install/packages.yml` — edit that file, not the script. Packages under an `apt_group_<name>:` key are optional per machine: `SKIP="android" ./bootstrap.sh` leaves that group out.
 
 After bootstrap, authenticate fresh: `ssh-keygen -t ed25519`, upload the key to GitHub, `gpg --full-generate-key` if needed, sign in to browsers and the password manager through their own sync.
