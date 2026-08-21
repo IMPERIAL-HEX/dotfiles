@@ -72,13 +72,6 @@ apt_repos:
   - name: fastfetch-ppa
     ppa: ppa:zhangsongcui3371/fastfetch
     packages: []         # fastfetch listed under apt above; PPA gives newer builds
-  - name: cursor
-    list: "see /etc/apt/sources.list.d/cursor.sources on old box"
-    packages: [cursor]
-  - name: antigravity
-    key: /etc/apt/keyrings/antigravity.gpg   # from old box
-    list: "deb https://us-central1-apt.pkg.dev/projects/antigravity-auto-updater-dev antigravity-debian main"
-    packages: [antigravity]
 
 scripted_installers:
   # no apt repo offers these; the scripts fetch the latest release and are idempotent
@@ -92,12 +85,8 @@ scripted_installers:
 
 deb_downloads:
   # dpkg packages with no apt repo; download fresh .deb and `apt install ./file.deb`
-  - name: kiro
-    source: https://kiro.dev
   - name: docker-desktop
     source: https://docs.docker.com/desktop/setup/install/linux/ubuntu/
-  - name: obsidian
-    source: https://obsidian.md/download
 
 snap: [pinta, vlc]        # firefox + thunderbird ship with Ubuntu
 
@@ -115,8 +104,6 @@ standalone_installers:
     source: https://github.com/jesseduffield/lazygit/releases   # to /usr/local/bin
   - name: claude
     source: https://claude.ai/install.sh
-  - name: zed
-    source: https://zed.dev/install.sh
   - name: chezmoi
     source: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
 
