@@ -75,7 +75,6 @@ Skipping this loses nothing — the next auto-commit stages the whole repo and s
 ## What is managed
 
 - zsh: `.zshrc`, `.zshenv`, and the real config in `.config/zsh/` (zoxide initializes last in `tools.zsh`; keep it there)
-- git: `.gitconfig` and the global ignore at `.config/git/ignore`
 - neovim: `.config/nvim/` (LazyVim; `lazy-lock.json` pins the plugins). The nvim binary itself comes from [bob](https://github.com/MordechaiHadad/bob), never apt — `env.zsh` puts `~/.local/share/bob/nvim-bin` on PATH.
 - terminals and editors: `.config/ghostty/config`, `.config/zed/`
 - btop: `btop.conf` and `themes/` only
@@ -88,6 +87,8 @@ Never added: `.ssh`, `.gnupg`, `.aws`, `.npmrc`, `.password-store`, any `credent
 `.gitconfig` references `~/ws-work/.gitconfig-work` for the work identity. That file lives in the work tree and is not synced.
 
 There are no templates yet. When a second machine needs a different value (the first candidate is `.gitconfig`), rename the source file to `.tmpl` and branch on `.chezmoi.hostname`.
+
+Note: .gitconfig is not managed because work or personal pc can differ in the root git account.
 
 ## New machine
 
