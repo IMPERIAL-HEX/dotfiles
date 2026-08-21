@@ -21,32 +21,39 @@ Never added: `.ssh`, `.gnupg`, `.aws`, `.npmrc`, `.password-store`, any `credent
 
 chezmoi copies files between here (the source) and `$HOME` (the target). Nothing is symlinked.
 
-Add a new file or directory:
+Two things can drift: managed dotfiles in `$HOME` versus their copies here, and this repo versus GitHub. `chezmoi status` answers the first, `chezmoi git -- status` the second. `chezmoi status` printing nothing means no dotfile has drifted — it never shows repo-payload files (`.install/`, this README), because those are not deployed to `$HOME`.
 
-    chezmoi add ~/.config/foo/config
+**Auto-sync is on.** `.chezmoi.toml.tmpl` sets `git.autoCommit` and `git.autoPush`, so any chezmoi command that changes the source (`add`, `re-add`, `edit`, `forget`) commits and pushes to GitHub by itself — no git commands needed. The auto-commit stages the whole source directory, so pending payload edits ride along with it. Two consequences: never `chezmoi add` a secret, it lands on GitHub immediately; and a payload-only edit sits unpushed until the next dotfile change unless you push it yourself (below).
+
+**After editing a managed dotfile in place** — the normal case, run when you want the change kept:
+
+    chezmoi status        # confirm what drifted (M = modified)
+    chezmoi diff          # shows the edit being UNDONE — that is what apply would do
+    chezmoi re-add        # keep the edit; auto-commits and pushes
+
+If the diff shows an edit you regret, run `chezmoi apply` instead: the repo version wins and your `$HOME` file is restored.
+
+**Adding something new** to management:
+
+    chezmoi add ~/.config/foo/config    # auto-commits and pushes
 
 Adding a directory recurses. Add specific files when the directory mixes config with state, the way `.config/btop` does.
 
-After editing a managed file in place (the normal case):
+**After editing repo payload** (`.install/packages.yml`, `bootstrap.sh`, this README) — invisible to `chezmoi status`; push right away with git passthrough:
 
-    chezmoi re-add        # pull your edits into the source
-    chezmoi cd            # subshell in this repo
-    git add -A && git commit -m "..." && git push
+    chezmoi git -- add -A
+    chezmoi git -- commit -m "..."
+    chezmoi git -- push
 
-Or edit through chezmoi and push the other way:
+**On another machine**, pull and apply whatever was pushed:
 
-    chezmoi edit ~/.zshrc
-    chezmoi diff          # review before touching $HOME
-    chezmoi apply
+    chezmoi update
 
-On another machine, pull changes:
-
-    chezmoi update        # git pull + apply
-
-Sanity checks:
+**Sanity checks**, any time something feels off:
 
     chezmoi managed       # everything under management
     chezmoi diff          # empty means $HOME matches the repo
+    chezmoi git -- status # empty means the repo matches GitHub (with autoPush it should be)
     chezmoi doctor
 
 File naming in the source: `dot_` becomes a leading dot, `private_` means mode 0600, `.tmpl` files run through templating. `chezmoi add` picks these for you. `.chezmoiignore` lists target paths chezmoi must not manage — `README.md` is there so it stays a repo doc instead of landing in `$HOME`.
