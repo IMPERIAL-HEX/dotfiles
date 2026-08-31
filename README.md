@@ -10,7 +10,9 @@ Sync to GitHub is automatic: every chezmoi command that changes the repo (`add`,
 
 The auto-sync setting lives in `.chezmoi.toml.tmpl`, the template chezmoi generates its real config from. Whenever that template changes — edited here, or pulled onto another machine by `chezmoi update` — chezmoi warns `config file template has changed, run chezmoi init to regenerate config file`. That is not an error: chezmoi refuses to rewrite its own config silently and wants you to trigger it. Run `chezmoi init` (no arguments) and the warning clears.
 
-In the repo, file names encode the target: `dot_zshrc` becomes `.zshrc`, `private_` means mode 0600, `.tmpl` runs through templating. `chezmoi add` picks these for you. `.chezmoiignore` lists paths chezmoi pretends do not exist: `README.md` (so this doc never lands in `$HOME`) and `.config/btop/btop.log` (churn).
+In the repo, file names encode the target: `dot_zshrc` becomes `.zshrc`, `private_` means mode 0600, `.tmpl` runs through templating. `chezmoi add` picks these for you. `.chezmoiignore` lists paths chezmoi pretends do not exist: `README.md`, `.gitignore`, and `.config/btop/btop.log`.
+
+`.gitignore` protects common environment files, keys, and credential stores from Git. It is not deployed. Keep secrets out of this public repository; `private_` limits target-file permissions but does not encrypt a file.
 
 ## The daily habit
 

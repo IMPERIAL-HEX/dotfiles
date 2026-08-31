@@ -1,0 +1,31 @@
+# Local environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Private keys and certificate bundles
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.kdbx
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+
+# Credential files and local credential stores
+credentials.json
+credentials.yaml
+credentials.yml
+service-account*.json
+secrets.yml
+secrets.yaml
+.aws/
+.gnupg/
+.ssh/
+.netrc
+.npmrc
+.pypirc
