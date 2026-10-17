@@ -9,7 +9,7 @@ apt:
   - git
   - curl
   - tmux
-  - bat             # aliased as batcat wrappers in aliases.zsh
+  - bat # aliased as batcat wrappers in aliases.zsh
   - eza
   - fd-find
   - fzf
@@ -21,19 +21,19 @@ apt:
   - tree-sitter-cli
   - luarocks
   - build-essential
-  - unzip           # bob-nvim.sh needs it
+  - unzip # bob-nvim.sh needs it
   - python3-pip
   - python3-venv
   - mkcert
-  - gh              # GitHub CLI (Ubuntu archive)
+  - gh # GitHub CLI (Ubuntu archive)
   - debsums
   - net-tools
   - nethogs
   - ffmpeg
-  - zoxide          # was a manual static binary on the old box; apt version is fine
+  - zoxide # was a manual static binary on the old box; apt version is fine
 
-apt_desktop:        # [linux-only]
-  - xclip           # WSL uses clip.exe (see nvim options.lua)
+apt_desktop: # [linux-only]
+  - xclip # WSL uses clip.exe (see nvim options.lua)
   - dconf-editor
   - gnome-shell-extension-manager
   - gnome-software-plugin-flatpak
@@ -44,11 +44,18 @@ apt_desktop:        # [linux-only]
 # Optional groups: add `apt_group_<name>:` lists here. Every group installs by default;
 # skip on a machine with: SKIP="<name> <name>" ./bootstrap.sh
 
-apt_repos:          # [linux-only] WSL gets Docker, VS Code, browsers and chat apps from Windows
+apt_repos: # [linux-only] WSL gets Docker, VS Code, browsers and chat apps from Windows
   - name: docker
     key: https://download.docker.com/linux/ubuntu/gpg
-    list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $CODENAME stable"   # $CODENAME from /etc/os-release
-    packages: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
+    list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $CODENAME stable" # $CODENAME from /etc/os-release
+    packages:
+      [
+        docker-ce,
+        docker-ce-cli,
+        containerd.io,
+        docker-buildx-plugin,
+        docker-compose-plugin,
+      ]
   - name: vscode
     key: https://packages.microsoft.com/keys/microsoft.asc
     list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main"
@@ -57,49 +64,46 @@ apt_repos:          # [linux-only] WSL gets Docker, VS Code, browsers and chat a
     key: https://dl.google.com/linux/linux_signing_key.pub
     list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome-stable/deb/ stable main"
     packages: [google-chrome-stable]
-  - name: slack
-    key: https://packagecloud.io/slacktechnologies/slack/gpgkey
-    list: "deb [signed-by=/etc/apt/keyrings/slack.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ jessie main"
-    packages: [slack-desktop]
-  - name: fastfetch-ppa            # may lag new Ubuntu releases; archive fastfetch is fine there
+  - name: fastfetch-ppa # may lag new Ubuntu releases; archive fastfetch is fine there
     ppa: ppa:zhangsongcui3371/fastfetch
-    packages: []         # fastfetch listed under apt above; PPA gives newer builds
+    packages: [] # fastfetch listed under apt above; PPA gives newer builds
 
 scripted_installers:
   # no apt repo offers these; the scripts fetch the latest release and are idempotent
-  - name: ghostty                  # [linux-only]
-    script: installers/ghostty.sh    # ghostty-ubuntu community .deb
-  - name: gcm                        # [linux-only]; WSL authenticates via gh/SSH. .gitconfig points at /usr/local/bin/git-credential-manager
+  - name: ghostty # [linux-only]
+    script: installers/ghostty.sh # ghostty-ubuntu community .deb
+  - name: gcm # [linux-only]; WSL authenticates via gh/SSH. .gitconfig points at /usr/local/bin/git-credential-manager
     script: installers/gcm.sh
   - name: neovim
-    script: installers/bob-nvim.sh   # bob manages nvim versions; never apt (0.9.5 in noble)
-                                     # active nvim: ~/.local/share/bob/nvim-bin (on PATH via env.zsh)
+    script:
+      installers/bob-nvim.sh # bob manages nvim versions; never apt (0.9.5 in noble)
+      # active nvim: ~/.local/share/bob/nvim-bin (on PATH via env.zsh)
 
-deb_downloads:      # [linux-only]
+deb_downloads: # [linux-only]
   # dpkg packages with no apt repo; download fresh .deb and `apt install ./file.deb`
   - name: docker-desktop
     source: https://docs.docker.com/desktop/setup/install/linux/ubuntu/
 
-snap: [pinta, vlc]        # [linux-only] firefox + thunderbird ship with Ubuntu
+snap: [pinta, vlc] # [linux-only] firefox + thunderbird ship with Ubuntu
 
-flatpak: [com.getpostman.Postman]   # [linux-only]
+flatpak: [com.getpostman.Postman] # [linux-only]
 
 node:
-  manager: nvm            # decided 2026-08: keep nvm; revisit mise when setting up the new box
+  manager: nvm # decided 2026-08: keep nvm; revisit mise when setting up the new box
   versions: ["22", "24"]
   default: "24"
-  npm_global: [ctx7, typescript]   # corepack ships with node
-  pnpm: standalone        # curl -fsSL https://get.pnpm.io/install.sh | sh -  (PNPM_HOME set in env.zsh)
+  npm_global: [ctx7, typescript] # corepack ships with node
+  pnpm: standalone # curl -fsSL https://get.pnpm.io/install.sh | sh -  (PNPM_HOME set in env.zsh)
 
 standalone_installers:
   - name: lazygit
-    source: https://github.com/jesseduffield/lazygit/releases   # to /usr/local/bin
+    source: https://github.com/jesseduffield/lazygit/releases # to /usr/local/bin
   - name: claude
     source: https://claude.ai/install.sh
   - name: chezmoi
     source: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
 
-gnome_extensions:   # [linux-only]
+gnome_extensions: # [linux-only]
   # install with gext (pipx install gnome-extensions-cli) BEFORE loading dconf/extensions.ini
   - blur-my-shell@aunetx
   - space-bar@luchrioh
@@ -111,4 +115,4 @@ gnome_extensions:   # [linux-only]
   - clipboard-history@alexsaveau.dev
 
 shell_framework:
-  oh_my_zsh: https://ohmyz.sh   # install before first zsh login; nothing custom lives inside it
+  oh_my_zsh: https://ohmyz.sh # install before first zsh login; nothing custom lives inside it
