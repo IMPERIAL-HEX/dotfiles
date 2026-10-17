@@ -1,4 +1,6 @@
 # Declarative package manifest for machine bootstrap. Edit this file, not the scripts.
+# Platforms: bootstrap.sh detects native Linux vs WSL. Keys marked [linux-only]
+# are skipped under WSL, where Windows provides the desktop, Docker and GUI apps.
 # Curated 2026-08 from apt history (479 explicit installs), zsh history frequency, and apt-mark showmanual.
 
 apt:
@@ -16,7 +18,6 @@ apt:
   - fastfetch
   - tldr
   - plocate
-  - xclip
   - tree-sitter-cli
   - luarocks
   - build-essential
@@ -24,12 +25,15 @@ apt:
   - python3-pip
   - python3-venv
   - mkcert
+  - gh              # GitHub CLI (Ubuntu archive)
   - debsums
   - net-tools
   - nethogs
   - ffmpeg
   - zoxide          # was a manual static binary on the old box; apt version is fine
-  # desktop apps
+
+apt_desktop:        # [linux-only]
+  - xclip           # WSL uses clip.exe (see nvim options.lua)
   - localsend
   - obs-studio
   - dconf-editor
@@ -42,16 +46,17 @@ apt:
 
 # Optional groups. Every `apt_group_<name>` installs by default;
 # skip on a machine with: SKIP="android other" ./bootstrap.sh
+# Under WSL, android is skipped automatically (no USB passthrough by default).
 apt_group_android:
   - adb
   - fastboot
   - android-sdk-libsparse-utils
   - libusb-1.0-0
 
-apt_repos:
+apt_repos:          # [linux-only] WSL gets Docker, VS Code, browsers and chat apps from Windows
   - name: docker
     key: https://download.docker.com/linux/ubuntu/gpg
-    list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu noble stable"
+    list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $CODENAME stable"   # $CODENAME from /etc/os-release
     packages: [docker-ce, docker-ce-cli, containerd.io, docker-buildx-plugin, docker-compose-plugin]
   - name: vscode
     key: https://packages.microsoft.com/keys/microsoft.asc
@@ -69,28 +74,28 @@ apt_repos:
     key: https://packagecloud.io/slacktechnologies/slack/gpgkey
     list: "deb [signed-by=/etc/apt/keyrings/slack.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ jessie main"
     packages: [slack-desktop]
-  - name: fastfetch-ppa
+  - name: fastfetch-ppa            # may lag new Ubuntu releases; archive fastfetch is fine there
     ppa: ppa:zhangsongcui3371/fastfetch
     packages: []         # fastfetch listed under apt above; PPA gives newer builds
 
 scripted_installers:
   # no apt repo offers these; the scripts fetch the latest release and are idempotent
-  - name: ghostty
+  - name: ghostty                  # [linux-only]
     script: installers/ghostty.sh    # ghostty-ubuntu community .deb
-  - name: gcm                        # .gitconfig points at /usr/local/bin/git-credential-manager
+  - name: gcm                        # [linux-only]; WSL authenticates via gh/SSH. .gitconfig points at /usr/local/bin/git-credential-manager
     script: installers/gcm.sh
   - name: neovim
     script: installers/bob-nvim.sh   # bob manages nvim versions; never apt (0.9.5 in noble)
                                      # active nvim: ~/.local/share/bob/nvim-bin (on PATH via env.zsh)
 
-deb_downloads:
+deb_downloads:      # [linux-only]
   # dpkg packages with no apt repo; download fresh .deb and `apt install ./file.deb`
   - name: docker-desktop
     source: https://docs.docker.com/desktop/setup/install/linux/ubuntu/
 
-snap: [pinta, vlc]        # firefox + thunderbird ship with Ubuntu
+snap: [pinta, vlc]        # [linux-only] firefox + thunderbird ship with Ubuntu
 
-flatpak: [com.getpostman.Postman]
+flatpak: [com.getpostman.Postman]   # [linux-only]
 
 node:
   manager: nvm            # decided 2026-08: keep nvm; revisit mise when setting up the new box
@@ -107,7 +112,7 @@ standalone_installers:
   - name: chezmoi
     source: sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
 
-gnome_extensions:
+gnome_extensions:   # [linux-only]
   # install with gext (pipx install gnome-extensions-cli) BEFORE loading dconf/extensions.ini
   - blur-my-shell@aunetx
   - space-bar@luchrioh

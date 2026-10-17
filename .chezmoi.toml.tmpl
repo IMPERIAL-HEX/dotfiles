@@ -1,3 +1,21 @@
+{{- /* Platform: "linux" (native desktop), "wsl" (Linux under Windows) or "windows". */ -}}
+{{- $platform := "linux" -}}
+{{- if eq .chezmoi.os "windows" -}}
+{{-   $platform = "windows" -}}
+{{- else if eq .chezmoi.os "linux" -}}
+{{-   if (.chezmoi.kernel.osrelease | lower | contains "microsoft") -}}
+{{-     $platform = "wsl" -}}
+{{-   end -}}
+{{- end -}}
+[data]
+    platform = {{ $platform | quote }}
+
 [git]
+{{- if eq $platform "windows" }}
+    # Windows only pulls; WSL is the canonical editing environment.
+    autoCommit = false
+    autoPush = false
+{{- else }}
     autoCommit = true
     autoPush = true
+{{- end }}

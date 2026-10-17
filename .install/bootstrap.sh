@@ -1,13 +1,23 @@
 #!/usr/bin/env bash
 # New-machine bootstrap. Reads package lists from packages.yml (same directory).
-# Usage: ./bootstrap.sh            run all phases in order
+# Usage: ./bootstrap.sh            run all phases for this platform, in order
 #        ./bootstrap.sh apt gext   run only the named phases
 # Failures append to failed.txt instead of stopping the run.
+#
+# Platform is detected: native Linux runs every phase; WSL skips the desktop
+# (GNOME, dconf, snap/flatpak, GUI apps, Docker CE), which Windows provides.
+# Override the dotfiles source with DOTFILES_REPO=<url> (e.g. a fork).
 
 set -u
 cd "$(dirname "$0")"
 FAILED=failed.txt
 : > "$FAILED"
+
+if grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then PLATFORM=wsl; else PLATFORM=linux; fi
+CODENAME="$(. /etc/os-release && echo "$VERSION_CODENAME")"
+DOTFILES_REPO="${DOTFILES_REPO:-https://github.com/IMPERIAL-HEX/dotfiles.git}"
+# no USB passthrough into WSL by default, so adb/fastboot are useless there
+[ "$PLATFORM" = wsl ] && SKIP="${SKIP:-} android"
 
 log()  { printf '\n==> %s\n' "$*"; }
 try()  { "$@" || echo "$*" >> "$FAILED"; }
@@ -22,7 +32,12 @@ yq_list() {
 }
 
 phase_repos() {
-  log "apt repos and keys"
+  if [ "$PLATFORM" = wsl ]; then
+    log "apt repos: none needed under WSL (desktop/Docker repos are linux-only)"
+    sudo apt-get update
+    return
+  fi
+  log "apt repos and keys ($CODENAME)"
   sudo install -d -m 0755 /etc/apt/keyrings
   try sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
   fetch_key() { curl -fsSL "$1" | sudo gpg --dearmor --yes -o "/etc/apt/keyrings/$2"; }
@@ -30,7 +45,7 @@ phase_repos() {
   try fetch_key https://packages.microsoft.com/keys/microsoft.asc microsoft.gpg
   try fetch_key https://updates.signal.org/desktop/apt/keys.asc signal-desktop.gpg
   try fetch_key https://packagecloud.io/slacktechnologies/slack/gpgkey slack.gpg
-  echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu noble stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+  echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
   echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list >/dev/null
   echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/signal-desktop.gpg] https://updates.signal.org/desktop/apt xenial main" | sudo tee /etc/apt/sources.list.d/signal.list >/dev/null
   echo "deb [signed-by=/etc/apt/keyrings/slack.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ jessie main" | sudo tee /etc/apt/sources.list.d/slack.list >/dev/null
@@ -39,8 +54,10 @@ phase_repos() {
 }
 
 phase_apt() {
-  log "apt packages"
-  for p in $(yq_list apt) docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code google-chrome-stable signal-desktop slack-desktop; do
+  log "apt packages ($PLATFORM)"
+  pkgs="$(yq_list apt)"
+  [ "$PLATFORM" = linux ] && pkgs="$pkgs $(yq_list apt_desktop) docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code google-chrome-stable signal-desktop slack-desktop"
+  for p in $pkgs; do
     try sudo apt-get install -y "$p"
   done
   # optional groups; exclude with SKIP="android other" ./bootstrap.sh
@@ -52,8 +69,14 @@ phase_apt() {
 }
 
 phase_installers() {
-  log "scripted installers (ghostty, gcm, neovim via bob)"
-  for s in installers/*.sh; do try bash "$s"; done
+  log "scripted installers ($PLATFORM)"
+  for s in installers/*.sh; do
+    # ghostty: native terminal only; gcm: WSL authenticates through gh/SSH instead
+    if [ "$PLATFORM" = wsl ]; then
+      case "$s" in installers/ghostty.sh|installers/gcm.sh) continue;; esac
+    fi
+    try bash "$s"
+  done
 }
 
 phase_snapflat() {
@@ -83,7 +106,7 @@ phase_shell() {
 phase_dotfiles() {
   log "chezmoi apply"
   command -v chezmoi >/dev/null || try sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
-  try chezmoi init --apply https://github.com/IMPERIAL-HEX/dotfiles.git
+  try chezmoi init --apply "$DOTFILES_REPO"
 }
 
 phase_gext() {
@@ -111,7 +134,12 @@ phase_chsh() {
   [ "$(getent passwd "$USER" | cut -d: -f7)" = "$(command -v zsh)" ] || try chsh -s "$(command -v zsh)"
 }
 
-ALL=(repos apt installers snapflat node shell dotfiles gext dconf chsh)
+if [ "$PLATFORM" = wsl ]; then
+  ALL=(repos apt installers node shell dotfiles chsh)
+else
+  ALL=(repos apt installers snapflat node shell dotfiles gext dconf chsh)
+fi
+log "platform: $PLATFORM ($CODENAME), phases: ${*:-${ALL[*]}}"
 PHASES=("${@:-${ALL[@]}}")
 for ph in "${PHASES[@]}"; do "phase_$ph"; done
 

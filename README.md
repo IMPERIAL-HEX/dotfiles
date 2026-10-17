@@ -10,7 +10,7 @@ Sync to GitHub is automatic: every chezmoi command that changes the repo (`add`,
 
 The auto-sync setting lives in `.chezmoi.toml.tmpl`, the template chezmoi generates its real config from. Whenever that template changes — edited here, or pulled onto another machine by `chezmoi update` — chezmoi warns `config file template has changed, run chezmoi init to regenerate config file`. That is not an error: chezmoi refuses to rewrite its own config silently and wants you to trigger it. Run `chezmoi init` (no arguments) and the warning clears.
 
-In the repo, file names encode the target: `dot_zshrc` becomes `.zshrc`, `private_` means mode 0600, `.tmpl` runs through templating. `chezmoi add` picks these for you. `.chezmoiignore` lists paths chezmoi pretends do not exist: `README.md`, `.gitignore`, and `.config/btop/btop.log`.
+In the repo, file names encode the target: `dot_zshrc` becomes `.zshrc`, `private_` means mode 0600, `.tmpl` runs through templating. `chezmoi add` picks these for you. `.chezmoiignore.tmpl` lists paths chezmoi pretends do not exist: always `README.md`, `.gitignore`, and `.config/btop/btop.log`, plus per-platform exclusions (see Platforms).
 
 `.gitignore` protects common environment files, keys, and credential stores from Git. It is not deployed. Keep secrets out of this public repository; `private_` limits target-file permissions but does not encrypt a file.
 
@@ -86,7 +86,19 @@ Skipping this loses nothing — the next auto-commit stages the whole repo and s
 
 Never added: `.ssh`, `.gnupg`, `.aws`, `.npmrc`, `.password-store`, any `credentials.json`, `.zsh_history`, `.zcompdump*`, app state under `.config` (Code, Chrome, Slack, and the rest). Credentials are re-created on each machine, not synced.
 
-There are no templates yet. When a second machine needs a different value (the first candidate is `.gitconfig`), rename the source file to `.tmpl` and branch on `.chezmoi.hostname`.
+## Platforms
+
+The same repo serves three kinds of machine. `.chezmoi.toml.tmpl` detects which one it is on and stores it as `.platform`, which any template can branch on:
+
+- `linux`: native Ubuntu desktop. Everything applies, including GNOME, Ghostty and Zed.
+- `wsl`: Ubuntu under WSL2 on a Windows machine. Shell, Neovim and CLI config apply; GNOME bookmarks, Ghostty and Zed are ignored because Windows owns the desktop. Neovim's clipboard goes through `clip.exe` (`options.lua`).
+- `windows`: chezmoi running natively on Windows. Linux shell/editor config is ignored. This instance never auto-commits or pushes: WSL is the canonical place to edit the repo, Windows only runs `chezmoi update`.
+
+`bootstrap.sh` detects native Linux vs WSL the same way. Under WSL it skips apt repos, desktop apps, Docker CE, Ghostty, git-credential-manager, snap/flatpak, GNOME extensions and dconf, since Windows provides the desktop and Docker Desktop provides Docker. The Ubuntu codename is read from `/etc/os-release`, so nothing assumes a specific release.
+
+Keys marked `[linux-only]` in `packages.yml` are skipped under WSL.
+
+When a file needs different content per machine (the first candidate is `.gitconfig`), rename the source file to `.tmpl` and branch on `.platform` or `.chezmoi.hostname`.
 
 Note: .gitconfig is not managed because work or personal pc can differ in the root git account.
 
@@ -96,8 +108,10 @@ Note: .gitconfig is not managed because work or personal pc can differ in the ro
     ~/.local/bin/chezmoi init https://github.com/IMPERIAL-HEX/dotfiles.git
     SKIP="android" ~/.local/share/chezmoi/.install/bootstrap.sh
 
+On WSL the same three commands work; the bootstrap picks the WSL phases automatically. To bootstrap from a fork or another copy of this repo, set `DOTFILES_REPO=<url>` before running `bootstrap.sh`.
+
 The clone is HTTPS on purpose: pushes and private-repo pulls authenticate through git-credential-manager (browser sign-in on first use), not SSH keys. `SKIP` is optional — leave it off to install every group.
 
-`bootstrap.sh` runs phases in order: apt repos, apt, scripted installers (ghostty, gcm, neovim via bob — `.install/installers/`, each fetches the latest release and is safe to rerun), snap/flatpak, node (nvm), oh-my-zsh, `chezmoi apply`, GNOME extensions, dconf, `chsh`. Extensions must install before the dconf load or their settings vanish silently. Failures collect in `failed.txt`; rerun a single phase with `./bootstrap.sh <phase>`. Package choices live in `.install/packages.yml` — edit that file, not the script. Packages under an `apt_group_<name>:` key are optional per machine: `SKIP="android" ./bootstrap.sh` leaves that group out.
+On native Linux, `bootstrap.sh` runs phases in order: apt repos, apt, scripted installers (ghostty, gcm, neovim via bob — `.install/installers/`, each fetches the latest release and is safe to rerun), snap/flatpak, node (nvm), oh-my-zsh, `chezmoi apply`, GNOME extensions, dconf, `chsh`. Extensions must install before the dconf load or their settings vanish silently. Failures collect in `failed.txt`; rerun a single phase with `./bootstrap.sh <phase>`. Package choices live in `.install/packages.yml` — edit that file, not the script. Packages under an `apt_group_<name>:` key are optional per machine: `SKIP="android" ./bootstrap.sh` leaves that group out.
 
 After bootstrap, authenticate fresh: `ssh-keygen -t ed25519`, upload the key to GitHub, `gpg --full-generate-key` if needed, sign in to browsers and the password manager through their own sync.
