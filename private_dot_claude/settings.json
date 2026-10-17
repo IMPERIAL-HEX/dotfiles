@@ -64,7 +64,7 @@
       "/tmp"
     ]
   },
-  "model": "claude-fable-5[1m]",
+  "model": "opus",
   "hooks": {
     "Notification": [
       {
@@ -78,7 +78,18 @@
       }
     ]
   },
-  "effortLevel": "xhigh",
+  "effortLevel": "high",
+  "modelSettings": {
+    "claude-sonnet-5": {
+      "effortLevel": "high"
+    },
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    },
+    "claude-sonnet-5-5": {
+      "effortLevel": "high"
+    }
+  },
   "theme": "dark",
   "switchModelsOnFlag": true,
   "agentPushNotifEnabled": true
