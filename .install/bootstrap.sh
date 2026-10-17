@@ -6,7 +6,7 @@
 #
 # Platform is detected: native Linux runs every phase; WSL skips the desktop
 # (GNOME, dconf, snap/flatpak, GUI apps, Docker CE), which Windows provides.
-# Override the dotfiles source with DOTFILES_REPO=<url> (e.g. a fork).
+# The dotfiles source defaults to the existing chezmoi clone; override with DOTFILES_REPO=<url>.
 
 set -u
 cd "$(dirname "$0")"
@@ -15,9 +15,8 @@ FAILED=failed.txt
 
 if grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then PLATFORM=wsl; else PLATFORM=linux; fi
 CODENAME="$(. /etc/os-release && echo "$VERSION_CODENAME")"
-DOTFILES_REPO="${DOTFILES_REPO:-https://github.com/IMPERIAL-HEX/dotfiles.git}"
-# no USB passthrough into WSL by default, so adb/fastboot are useless there
-[ "$PLATFORM" = wsl ] && SKIP="${SKIP:-} android"
+# default: the repo this checkout was cloned from by `chezmoi init <url>`
+DOTFILES_REPO="${DOTFILES_REPO:-$(git -C "$HOME/.local/share/chezmoi" remote get-url origin 2>/dev/null)}"
 
 log()  { printf '\n==> %s\n' "$*"; }
 try()  { "$@" || echo "$*" >> "$FAILED"; }
@@ -43,11 +42,9 @@ phase_repos() {
   fetch_key() { curl -fsSL "$1" | sudo gpg --dearmor --yes -o "/etc/apt/keyrings/$2"; }
   try fetch_key https://download.docker.com/linux/ubuntu/gpg docker.gpg
   try fetch_key https://packages.microsoft.com/keys/microsoft.asc microsoft.gpg
-  try fetch_key https://updates.signal.org/desktop/apt/keys.asc signal-desktop.gpg
   try fetch_key https://packagecloud.io/slacktechnologies/slack/gpgkey slack.gpg
   echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $CODENAME stable" | sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
   echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/code stable main" | sudo tee /etc/apt/sources.list.d/vscode.list >/dev/null
-  echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/signal-desktop.gpg] https://updates.signal.org/desktop/apt xenial main" | sudo tee /etc/apt/sources.list.d/signal.list >/dev/null
   echo "deb [signed-by=/etc/apt/keyrings/slack.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ jessie main" | sudo tee /etc/apt/sources.list.d/slack.list >/dev/null
   # chrome, cursor, antigravity register their own repos when their .deb installs
   sudo apt-get update
@@ -56,11 +53,11 @@ phase_repos() {
 phase_apt() {
   log "apt packages ($PLATFORM)"
   pkgs="$(yq_list apt)"
-  [ "$PLATFORM" = linux ] && pkgs="$pkgs $(yq_list apt_desktop) docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code google-chrome-stable signal-desktop slack-desktop"
+  [ "$PLATFORM" = linux ] && pkgs="$pkgs $(yq_list apt_desktop) docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin code google-chrome-stable slack-desktop"
   for p in $pkgs; do
     try sudo apt-get install -y "$p"
   done
-  # optional groups; exclude with SKIP="android other" ./bootstrap.sh
+  # optional groups; exclude with SKIP="<name> <name>" ./bootstrap.sh
   for key in $(grep -o '^apt_group_[a-z_]*' packages.yml); do
     grp="${key#apt_group_}"
     case " ${SKIP:-} " in *" $grp "*) log "skipping group: $grp"; continue;; esac
@@ -106,6 +103,7 @@ phase_shell() {
 phase_dotfiles() {
   log "chezmoi apply"
   command -v chezmoi >/dev/null || try sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin"
+  if [ -z "$DOTFILES_REPO" ]; then echo "set DOTFILES_REPO=<url>" >&2; echo "chezmoi init (no DOTFILES_REPO)" >> "$FAILED"; return; fi
   try chezmoi init --apply "$DOTFILES_REPO"
 }
 

@@ -1,9 +1,4 @@
 {
-  "env": {
-    "KB_REPO": "IMPERIAL-HEX/knowledge-base",
-    "KB_LOCAL": "/home/hex/work/knowledge-extraction/knowledge-base",
-    "KB_BASE": "main"
-  },
   "permissions": {
     "allow": [
       "Read",

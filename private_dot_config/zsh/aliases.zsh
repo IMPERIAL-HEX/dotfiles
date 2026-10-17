@@ -12,6 +12,5 @@ alias fd='fdfind'
 
 alias cat='batcat --paging=never'
 alias lzg='lazygit'
-alias kc='kiro-cli chat --trust-all-tools'
 alias mjp='monoJpreview'
 alias mjc='monoJclean'

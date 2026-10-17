@@ -34,24 +34,15 @@ apt:
 
 apt_desktop:        # [linux-only]
   - xclip           # WSL uses clip.exe (see nvim options.lua)
-  - localsend
-  - obs-studio
   - dconf-editor
   - gnome-shell-extension-manager
   - gnome-software-plugin-flatpak
   - flatpak
-  - pass
   # review: one-off era, install on demand instead
   # - testdisk exfatprogs xvfb virtualbox-7.2 obsidian(deb)
 
-# Optional groups. Every `apt_group_<name>` installs by default;
-# skip on a machine with: SKIP="android other" ./bootstrap.sh
-# Under WSL, android is skipped automatically (no USB passthrough by default).
-apt_group_android:
-  - adb
-  - fastboot
-  - android-sdk-libsparse-utils
-  - libusb-1.0-0
+# Optional groups: add `apt_group_<name>:` lists here. Every group installs by default;
+# skip on a machine with: SKIP="<name> <name>" ./bootstrap.sh
 
 apt_repos:          # [linux-only] WSL gets Docker, VS Code, browsers and chat apps from Windows
   - name: docker
@@ -66,10 +57,6 @@ apt_repos:          # [linux-only] WSL gets Docker, VS Code, browsers and chat a
     key: https://dl.google.com/linux/linux_signing_key.pub
     list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome-stable/deb/ stable main"
     packages: [google-chrome-stable]
-  - name: signal
-    key: https://updates.signal.org/desktop/apt/keys.asc
-    list: "deb [arch=amd64 signed-by=/etc/apt/keyrings/signal-desktop.gpg] https://updates.signal.org/desktop/apt xenial main"
-    packages: [signal-desktop]
   - name: slack
     key: https://packagecloud.io/slacktechnologies/slack/gpgkey
     list: "deb [signed-by=/etc/apt/keyrings/slack.gpg] https://packagecloud.io/slacktechnologies/slack/debian/ jessie main"

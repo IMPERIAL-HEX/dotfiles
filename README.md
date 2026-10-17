@@ -1,6 +1,6 @@
 # dotfiles
 
-Dotfiles for hex's machines, managed with [chezmoi](https://chezmoi.io). The repo also carries the machine-bootstrap payload in `.install/`.
+Dotfiles managed with [chezmoi](https://chezmoi.io). The repo also carries the machine-bootstrap payload in `.install/`.
 
 ## How it works
 
@@ -80,8 +80,7 @@ Skipping this loses nothing — the next auto-commit stages the whole repo and s
 - neovim: `.config/nvim/` (LazyVim; `lazy-lock.json` pins the plugins). The nvim binary itself comes from [bob](https://github.com/MordechaiHadad/bob), never apt — `env.zsh` puts `~/.local/share/bob/nvim-bin` on PATH.
 - terminals and editors: `.config/ghostty/config`, `.config/zed/`
 - btop: `btop.conf` and `themes/` only
-- GNOME file-manager bookmarks: `.config/gtk-3.0/bookmarks`
-- Claude Code: `.claude/settings.json`, `.claude/rules/`, and the hand-written `.claude/skills/kb/`. Marketplace skills are reinstallable and stay out.
+- Claude Code: `.claude/settings.json` and `.claude/rules/`. Marketplace skills are reinstallable and stay out.
 - `.bashrc` as a fallback shell
 
 Never added: `.ssh`, `.gnupg`, `.aws`, `.npmrc`, `.password-store`, any `credentials.json`, `.zsh_history`, `.zcompdump*`, app state under `.config` (Code, Chrome, Slack, and the rest). Credentials are re-created on each machine, not synced.
@@ -105,13 +104,18 @@ Note: .gitconfig is not managed because work or personal pc can differ in the ro
 ## New machine
 
     sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
-    ~/.local/bin/chezmoi init https://github.com/IMPERIAL-HEX/dotfiles.git
-    SKIP="android" ~/.local/share/chezmoi/.install/bootstrap.sh
+    ~/.local/bin/chezmoi init <repo-url>
+    ~/.local/share/chezmoi/.install/bootstrap.sh
 
-On WSL the same three commands work; the bootstrap picks the WSL phases automatically. To bootstrap from a fork or another copy of this repo, set `DOTFILES_REPO=<url>` before running `bootstrap.sh`.
+On WSL, authenticate GitHub first so a private repo can be cloned, then run the same commands; the bootstrap picks the WSL phases automatically:
 
-The clone is HTTPS on purpose: pushes and private-repo pulls authenticate through git-credential-manager (browser sign-in on first use), not SSH keys. `SKIP` is optional — leave it off to install every group.
+    sudo apt update && sudo apt install -y gh
+    gh auth login && gh auth setup-git
 
-On native Linux, `bootstrap.sh` runs phases in order: apt repos, apt, scripted installers (ghostty, gcm, neovim via bob — `.install/installers/`, each fetches the latest release and is safe to rerun), snap/flatpak, node (nvm), oh-my-zsh, `chezmoi apply`, GNOME extensions, dconf, `chsh`. Extensions must install before the dconf load or their settings vanish silently. Failures collect in `failed.txt`; rerun a single phase with `./bootstrap.sh <phase>`. Package choices live in `.install/packages.yml` — edit that file, not the script. Packages under an `apt_group_<name>:` key are optional per machine: `SKIP="android" ./bootstrap.sh` leaves that group out.
+`bootstrap.sh` re-applies from whatever repo `chezmoi init` cloned; set `DOTFILES_REPO=<url>` to use a different one.
+
+The clone is HTTPS on purpose. On native Linux, pushes and private-repo pulls authenticate through git-credential-manager (browser sign-in on first use); under WSL, `gh auth setup-git` makes `gh` the credential helper instead. `SKIP` is optional — leave it off to install every group.
+
+On native Linux, `bootstrap.sh` runs phases in order: apt repos, apt, scripted installers (ghostty, gcm, neovim via bob — `.install/installers/`, each fetches the latest release and is safe to rerun), snap/flatpak, node (nvm), oh-my-zsh, `chezmoi apply`, GNOME extensions, dconf, `chsh`. Extensions must install before the dconf load or their settings vanish silently. Failures collect in `failed.txt`; rerun a single phase with `./bootstrap.sh <phase>`. Package choices live in `.install/packages.yml` — edit that file, not the script. Packages under an `apt_group_<name>:` key are optional per machine: `SKIP="<name>" ./bootstrap.sh` leaves that group out.
 
 After bootstrap, authenticate fresh: `ssh-keygen -t ed25519`, upload the key to GitHub, `gpg --full-generate-key` if needed, sign in to browsers and the password manager through their own sync.

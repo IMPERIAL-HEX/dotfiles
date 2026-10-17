@@ -3,10 +3,9 @@ README.md
 .config/btop/btop.log
 {{- if ne .platform "linux" }}
 
-# Native-Linux desktop only: GNOME bookmarks, Ghostty,
+# Native-Linux desktop only: Ghostty,
 # and Zed (on Windows it runs natively with config in %APPDATA%)
 .config/ghostty
-.config/gtk-3.0
 .config/zed
 {{- end }}
 {{- if eq .platform "windows" }}
